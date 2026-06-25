@@ -5,4 +5,6 @@ const BACKEND_URL =
 
 export const socket = io(BACKEND_URL, {
   autoConnect: false,
+  transports: ["polling", "websocket"],
+  withCredentials: true,
 });
