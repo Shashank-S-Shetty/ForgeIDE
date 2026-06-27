@@ -68,8 +68,15 @@ export default function RoomPage() {
       socket.on("connect", joinRoom);
     }
 
+    // Receive output broadcast from another user who clicked Run
+    const handleRemoteOutput = ({ lines }: { lines: TerminalLine[] }) => {
+      setOutputLines(lines);
+    };
+    socket.on("receive-output", handleRemoteOutput);
+
     return () => {
       socket.off("connect", joinRoom);
+      socket.off("receive-output", handleRemoteOutput);
       socket.disconnect();
     };
   }, [roomId, userName]);
@@ -113,6 +120,9 @@ export default function RoomPage() {
       }
 
       setOutputLines(lines);
+
+      // Broadcast output to all other users in the room
+      socket.emit("run-output", { roomId, lines });
     } catch (err: unknown) {
       setOutputLines([
         { type: "error", text: `Execution failed: ${err instanceof Error ? err.message : String(err)}` },

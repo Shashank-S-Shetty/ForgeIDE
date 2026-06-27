@@ -124,6 +124,13 @@ io.on("connection", (socket) => {
     socket.to(roomId).emit("remote-file-deleted", { fileName });
   });
 
+  // Run output — broadcast execution result to everyone else in the room
+  socket.on("run-output", ({ roomId, lines }) => {
+    if (!roomId || !lines) return;
+    console.log(`Run output broadcast in room ${roomId} from ${socket.id}`);
+    socket.to(roomId).emit("receive-output", { lines });
+  });
+
   // Handle disconnect — clean up room membership
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
