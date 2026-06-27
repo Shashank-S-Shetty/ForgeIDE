@@ -114,6 +114,15 @@ export default function RoomPage() {
     }
   };
 
+  const handleNameChange = (newName: string) => {
+    setUserName(newName);
+    localStorage.setItem("forgeid-username", newName);
+    // Re-emit join-room so the server updates the participant list with the new name
+    if (socket.connected) {
+      socket.emit("join-room", { roomId, userName: newName });
+    }
+  };
+
   const handleTerminalCommand = async (
     command: string,
     addLines: (lines: TerminalLine[]) => void,
@@ -178,7 +187,7 @@ export default function RoomPage() {
     <main className={`flex flex-col h-screen overflow-hidden transition-colors duration-300 ${
       isDark ? "bg-[#0F172A] text-white" : "bg-gray-100 text-gray-900"
     }`}>
-      <Navbar roomId={roomId} userName={userName} onRun={handleRun} isRunning={isRunning} />
+      <Navbar roomId={roomId} userName={userName} onRun={handleRun} isRunning={isRunning} onNameChange={handleNameChange} />
 
       {/* Mobile tab switcher */}
       <div className={`md:hidden flex flex-shrink-0 border-b transition-colors duration-300 ${

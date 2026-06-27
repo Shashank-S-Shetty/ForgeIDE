@@ -11,14 +11,17 @@ interface NavbarProps {
   userName: string;
   onRun: () => void;
   isRunning: boolean;
+  onNameChange: (newName: string) => void;
 }
 
-export default function Navbar({ roomId, userName, onRun, isRunning }: NavbarProps) {
+export default function Navbar({ roomId, userName, onRun, isRunning, onNameChange }: NavbarProps) {
   const { isDark, toggleTheme } = useTheme();
   const [isConnected, setIsConnected] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState(userName);
 
   useEffect(() => {
     const onConnect = () => setIsConnected(true);
@@ -47,6 +50,13 @@ export default function Navbar({ roomId, userName, onRun, isRunning }: NavbarPro
       `Hey! Join me on ForgeIDE for real-time collaborative coding.\n\nRoom ID: ${roomId}\nDirect link: ${roomUrl}`
     );
     window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
+  };
+
+  const handleSaveName = () => {
+    const trimmed = nameInput.trim();
+    if (!trimmed || trimmed === userName) { setEditingName(false); return; }
+    onNameChange(trimmed);
+    setEditingName(false);
   };
 
   const initial = userName ? userName[0].toUpperCase() : "?";
@@ -130,10 +140,33 @@ export default function Navbar({ roomId, userName, onRun, isRunning }: NavbarPro
             <div className="flex items-center justify-center w-12 h-12 font-bold rounded-full bg-gradient-to-br from-purple-400 to-pink-500 text-white">
               {initial}
             </div>
-            <div>
-              <h3 className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{userName}</h3>
-              <p className="text-sm text-green-500">Status: Online</p>
-            </div>
+            {editingName ? (
+              <div className="flex items-center gap-2">
+                <input
+                  autoFocus
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleSaveName(); if (e.key === "Escape") setEditingName(false); }}
+                  maxLength={30}
+                  className={`w-28 px-2 py-1 rounded-lg text-sm font-semibold outline-none border transition-colors duration-300 ${
+                    isDark ? "bg-[#0B1120] border-cyan-500/50 text-white" : "bg-white border-cyan-500/50 text-gray-900"
+                  }`}
+                />
+                <button onClick={handleSaveName} className="text-xs px-2 py-1 rounded-lg bg-cyan-500 text-black font-bold hover:bg-cyan-400 transition-colors">✓</button>
+                <button onClick={() => setEditingName(false)} className="text-xs px-2 py-1 rounded-lg bg-gray-600 text-white font-bold hover:bg-gray-500 transition-colors">✕</button>
+              </div>
+            ) : (
+              <div>
+                <button
+                  onClick={() => { setNameInput(userName); setEditingName(true); }}
+                  className={`font-semibold text-left hover:text-cyan-400 transition-colors duration-200 ${isDark ? "text-white" : "text-gray-900"}`}
+                  title="Click to edit name"
+                >
+                  {userName}
+                </button>
+                <p className="text-sm text-green-500">Status: Online</p>
+              </div>
+            )}
           </div>
 
           <button
@@ -225,9 +258,32 @@ export default function Navbar({ roomId, userName, onRun, isRunning }: NavbarPro
               <div className="flex items-center justify-center w-10 h-10 font-bold rounded-full bg-gradient-to-br from-purple-400 to-pink-500 text-white text-sm">
                 {initial}
               </div>
-              <div>
-                <p className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>{userName}</p>
-                <p className="text-xs text-green-500">Online · {roomId}</p>
+              <div className="flex-1 min-w-0">
+                {editingName ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      autoFocus
+                      value={nameInput}
+                      onChange={(e) => setNameInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { handleSaveName(); setShowMobileMenu(false); } if (e.key === "Escape") setEditingName(false); }}
+                      maxLength={30}
+                      className={`flex-1 px-2 py-1 rounded-lg text-sm font-semibold outline-none border ${
+                        isDark ? "bg-[#0B1120] border-cyan-500/50 text-white" : "bg-white border-cyan-500/50 text-gray-900"
+                      }`}
+                    />
+                    <button onClick={() => { handleSaveName(); setShowMobileMenu(false); }} className="text-xs px-2 py-1 rounded-lg bg-cyan-500 text-black font-bold">✓</button>
+                  </div>
+                ) : (
+                  <div>
+                    <button
+                      onClick={() => { setNameInput(userName); setEditingName(true); }}
+                      className={`font-semibold text-sm hover:text-cyan-400 transition-colors ${isDark ? "text-white" : "text-gray-900"}`}
+                    >
+                      {userName} <span className="text-xs text-gray-500">(tap to edit)</span>
+                    </button>
+                    <p className="text-xs text-green-500">Online · {roomId}</p>
+                  </div>
+                )}
               </div>
             </div>
 
